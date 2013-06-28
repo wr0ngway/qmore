@@ -70,7 +70,7 @@ module Qmore
           queues[key] = values
         end
         Attr.set_dynamic_queues(queues)
-        redirect "/dynamicqueues"
+        redirect to("/dynamicqueues")
       end
 
       #
@@ -85,7 +85,7 @@ module Qmore
       app.post "/queuepriority" do
         priorities = params['priorities']
         Attr.set_priority_buckets priorities
-        redirect "/queuepriority"
+        redirect to("/queuepriority")
       end
 
     end
