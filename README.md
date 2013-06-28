@@ -3,6 +3,7 @@ Qmore is a qless plugin that gives one more control over how queues are processe
 Authored against Qless 0.9.3, so it at least works with that - try running the tests if you use a different version of qless
 
 [![Build Status](https://secure.travis-ci.org/wr0ngway/qmore.png)](http://travis-ci.org/wr0ngway/qmore)
+[![Coverage Status](https://coveralls.io/repos/wr0ngway/qmore/badge.png?branch=master)](https://coveralls.io/r/wr0ngway/qmore?branch=master)
 
 Usage
 -----
