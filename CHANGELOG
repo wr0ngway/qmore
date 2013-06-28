@@ -1,3 +1,10 @@
+0.5.1 (06/28/2013)
+------------------
+
+add coverage to readme <bac94ec> [Matt Conway]
+generate code coverage metrics during travis test runs <72e29b1> [Matt Conway]
+relax dependencies <dfcb2ac> [Matt Conway]
+
 0.5.0
 -----
 
