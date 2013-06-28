@@ -1,3 +1,8 @@
+0.5.2 (06/28/2013)
+------------------
+
+fix urls when mapped to a different path <d5d3757> [Matt Conway]
+
 0.5.1 (06/28/2013)
 ------------------
 
