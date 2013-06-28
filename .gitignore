@@ -7,3 +7,4 @@ pkg/*
 spec/dump.rdb
 spec/redis-server.log
 spec/redis.pid
+coverage

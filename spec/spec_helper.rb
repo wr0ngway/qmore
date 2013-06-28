@@ -1,4 +1,7 @@
 require 'rspec'
+require 'coveralls'
+Coveralls.wear!
+
 require 'qmore'
 
 # No need to start redis when running in Travis
