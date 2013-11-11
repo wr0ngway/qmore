@@ -11,6 +11,10 @@ module Qmore
       @description ||= @queues.map(&:name).join(', ') + " (qmore)"
     end
     
+    def prep_for_work!
+      # nothing here on purpose
+    end
+
     def reserve
       realize_queues.each do |q|
         job = q.pop
