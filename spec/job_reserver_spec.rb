@@ -83,69 +83,56 @@ describe "JobReserver" do
       reserver.reserve.should be_nil
     end
 
-    it "expands the queues in the job description" do
-      queues = []
-      ['high', 'critical', 'blahblah'].each do |q|
-        queue = Qmore.client.queues[q]
-        queue.put(SomeJob, [])
-        queues << queue
-      end
 
-      reserver = Qmore::JobReserver.new([Qmore.client.queues['*']])
-      reserver.description.should == 'blahblah, critical, high (qmore)'
-    end
-
-    it "updates the job description when a job is working" do
-      queues = []
-      ['high', 'critical', 'blahblah'].each do |q|
-        queue = Qmore.client.queues[q]
-        queue.put(SomeJob, [])
-        queues << queue
-      end
-
-      reserver = Qmore::JobReserver.new([Qmore.client.queues['*']])
-      reserver.description.should == 'blahblah, critical, high (qmore)'
-    end
-
-
-    it "expands the queues in the job description" do
-      queues = []
-      ['high', 'critical', 'blahblah'].each do |q|
-        queue = Qmore.client.queues[q]
-        queue.put(SomeJob, [])
-        queues << queue
-      end
-
-      reserver = Qmore::JobReserver.new([Qmore.client.queues['*']])
-      worker = Qless::Worker.new(reserver,
-                                 :run_as_single_process => true)
-      worker.work(0)
-
-      reserver.description.should == 'high (qmore)'
-    end
-
-
-    it "sets the procline to show the queue of the working job" do
-      queues = []
-      ['high', 'critical', 'blahblah'].each do |q|
-        queue = Qmore.client.queues[q]
-        queue.put(SomeJob, [])
-        queues << queue
-      end
+    context 'describing the job' do
 
       class MockReserver < Qmore::JobReserver
         attr_accessor :procline_value
         def procline(val)
-          self.procline_value = val
+          self.procline_value ||= []
+          self.procline_value << val
         end
       end
 
-      reserver = MockReserver.new([Qmore.client.queues['*']])
-      worker = Qless::Worker.new(reserver,
-                                 :run_as_single_process => true)
-      worker.work(0)
+      it "expands the queues in the job description" do
+        ['high', 'critical', 'blahblah'].each do |q|
+          queue = Qmore.client.queues[q]
+          queue.put(SomeJob, [])
+        end
 
-      reserver.procline_value.should == 'Running high (qmore)'
+        reserver = Qmore::JobReserver.new([Qmore.client.queues['*']])
+        reserver.description.should == 'blahblah, critical, high (qmore)'
+      end
+
+      it "sets the description to show it is no longer working when finished" do
+        ['high', 'critical', 'blahblah'].each do |q|
+          queue = Qmore.client.queues[q]
+          queue.put(SomeJob, [])
+        end
+
+        reserver = MockReserver.new([Qmore.client.queues['*']])
+        worker = Qless::Worker.new(reserver,
+          :run_as_single_process => true)
+        worker.work(0)
+
+        reserver.description.should == 'blahblah, critical, high (qmore)'
+      end
+
+      it "sets the procline to show the queue of the working job" do
+        queues = []
+        ['high', 'critical', 'blahblah'].each do |q|
+          queue = Qmore.client.queues[q]
+          queue.put(SomeJob, [])
+          queues << queue
+        end
+
+        reserver = MockReserver.new([Qmore.client.queues['*']])
+        worker = Qless::Worker.new(reserver,
+          :run_as_single_process => true)
+        worker.work(0)
+
+        reserver.procline_value.first.should == 'Running blahblah (qmore)'
+      end
     end
   end
 end

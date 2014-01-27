@@ -9,7 +9,7 @@ module Qmore
     end
 
     def description
-      set_description(realize_queues.map(&:name).join(', ')) unless @description
+      set_description(realize_queues) unless @description
       @description
     end
 
@@ -21,9 +21,11 @@ module Qmore
       realize_queues.each do |q|
         job = q.pop
         if job
-          set_description(job.queue.name)
+          set_description([job.queue])
           procline "Running #{description}"
           return job
+        else
+          set_description(realize_queues)
         end
       end
 
@@ -32,8 +34,8 @@ module Qmore
 
     private
 
-    def set_description(desc)
-      @description = desc + ' (qmore)'
+    def set_description(queue_names)
+      @description = queue_names.map(&:name).join(', ')  + ' (qmore)'
     end
 
     def realize_queues
@@ -45,7 +47,5 @@ module Qmore
       realized_queues = realized_queues.collect {|q| Qmore.client.queues[q] }
       realized_queues
     end
-
   end
-
 end
