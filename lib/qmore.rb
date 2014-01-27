@@ -1,16 +1,17 @@
 require 'qless'
 require 'qless/worker'
 require 'qmore/attributes'
+require 'qmore/util'
 require 'qmore/job_reserver'
 
 module Qmore
-  
+
   def self.client=(client)
     @client = client
   end
-  
+
   def self.client
-    @client ||= Qless::Client.new 
+    @client ||= Qless::Client.new
   end
 end
 

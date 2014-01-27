@@ -1,6 +1,7 @@
 module Qmore
   class JobReserver
     include Qmore::Attributes
+    include Qmore::Util
     attr_reader :queues
 
     def initialize(queues)
@@ -8,9 +9,10 @@ module Qmore
     end
 
     def description
-      @description ||= @queues.map(&:name).join(', ') + " (qmore)"
+      set_description(realize_queues.map(&:name).join(', ')) unless @description
+      @description
     end
-    
+
     def prep_for_work!
       # nothing here on purpose
     end
@@ -18,24 +20,32 @@ module Qmore
     def reserve
       realize_queues.each do |q|
         job = q.pop
-        return job if job
+        if job
+          set_description(job.queue.name)
+          procline "Running #{description}"
+          return job
+        end
       end
-      
+
       nil
     end
-    
+
     private
-    
+
+    def set_description(desc)
+      @description = desc + ' (qmore)'
+    end
+
     def realize_queues
       queue_names = @queues.collect(&:name)
       real_queues = Qmore.client.queues.counts.collect {|h| h['name'] }
-      
+
       realized_queues = expand_queues(queue_names, real_queues)
       realized_queues = prioritize_queues(get_priority_buckets, realized_queues)
       realized_queues = realized_queues.collect {|q| Qmore.client.queues[q] }
       realized_queues
     end
-          
+
   end
 
 end
