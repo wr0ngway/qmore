@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rake')
   s.add_development_dependency('rspec')
   s.add_development_dependency('rack-test')
+  s.add_development_dependency('pry')
   # Needed for correct ordering when passing hash params to rack-test
   s.add_development_dependency('orderedhash')
 
