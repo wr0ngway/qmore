@@ -1,32 +1,31 @@
 require 'rspec'
 require 'coveralls'
+require 'pry'
 Coveralls.wear!
 
 require 'qmore'
 
 # No need to start redis when running in Travis
 unless ENV['CI']
+  redis_configs_directory = File.join(File.dirname(File.expand_path(__FILE__)), "redis")
+  redis_configs = Dir.entries(redis_configs_directory).select{|f| !File.directory? f}
 
-  begin
-    Qmore.client.queues.counts
-  rescue Errno::ECONNREFUSED
-    spec_dir = File.dirname(File.expand_path(__FILE__))
-    REDIS_CMD = "redis-server #{spec_dir}/redis-test.conf"
-    
+  redis_configs.each do |config|
+    redis_cmd = "redis-server #{redis_configs_directory}/#{config}"
     puts "Starting redis for testing at localhost..."
-    puts `cd #{spec_dir}; #{REDIS_CMD}`
-    
+    puts `cd #{redis_configs_directory}; #{redis_cmd}`
+
     # Schedule the redis server for shutdown when tests are all finished.
     at_exit do
+      redis_instance_name = config.chomp(".conf")
       puts 'Stopping redis'
-      pid = File.read("#{spec_dir}/redis.pid").to_i rescue nil
+      pid = File.read("#{redis_configs_directory}/#{redis_instance_name}.pid").to_i rescue nil
       system ("kill -9 #{pid}") if pid.to_i != 0
-      File.delete("#{spec_dir}/redis.pid") rescue nil
-      File.delete("#{spec_dir}/redis-server.log") rescue nil
-      File.delete("#{spec_dir}/dump.rdb") rescue nil
+      File.delete("#{redis_configs_directory}/#{redis_instance_name}.pid") rescue nil
+      File.delete("#{redis_configs_directory}/#{redis_instance_name}-server.log") rescue nil
+      File.delete("#{redis_configs_directory}/#{redis_instance_name}-dump.rdb") rescue nil
     end
   end
-  
 end
 
 def dump_redis
