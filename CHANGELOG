@@ -1,3 +1,11 @@
+0.6.0 (02/25/2014)
+------------------
+
+Merge pull request #2 from backupify/sharded-qmore <a1d051b> [Matt Conway]
+add mri 2.1.0 to test targets <4b8f74c> [Matt Conway]
+enable redis for travis <4aafd15> [Matt Conway]
+qmore multiple client support <d1c11f6> [james-lawrence]
+
 0.5.3 (11/12/2013)
 ------------------
 
