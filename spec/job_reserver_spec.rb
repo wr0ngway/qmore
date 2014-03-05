@@ -26,10 +26,19 @@ describe "JobReserver" do
       queue_a.length.should == 0
       queue_b.length.should == 0
     end
+
+    it "shuffles the order of the clients" do
+      queue = Qmore.client.queues['queue']
+
+      reserver = Qmore::JobReserver.new([queue])
+      k = reserver.clients.keys
+      k.should_receive(:shuffle).once.and_return(reserver.clients.keys)
+      reserver.clients.should_receive(:keys).and_return(k)
+      reserver.reserve
+    end
   end
 
   context "basic qless behavior still works" do
-
     it "can reserve from multiple queues" do
       high_queue = Qmore.client.queues['high']
       critical_queue = Qmore.client.queues['critical']
@@ -38,6 +47,7 @@ describe "JobReserver" do
       critical_queue.put(SomeJob, [])
 
       reserver = Qmore::JobReserver.new([critical_queue, high_queue])
+
       reserver.reserve.queue.name.should == 'critical'
       reserver.reserve.queue.name.should == 'high'
     end
