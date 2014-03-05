@@ -1,3 +1,8 @@
+0.6.1 (03/05/2014)
+------------------
+
+shuffle clients so we do not select from the same order of clients every time <58edfde> [james-lawrence]
+
 0.6.0 (02/25/2014)
 ------------------
 
