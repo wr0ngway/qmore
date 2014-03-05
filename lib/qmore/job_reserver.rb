@@ -39,7 +39,8 @@ module Qmore
     def realize_queues
       realized_queues = []
 
-      self.clients.each do |client, regexes|
+      self.clients.keys.shuffle.each do |client|
+        regexes = self.clients[client]
         # Cache the queues so we don't make multiple calls.
         actual_queues = client.queues
 
