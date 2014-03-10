@@ -1,3 +1,8 @@
+0.6.2 (03/10/2014)
+------------------
+
+reduce the number of times we hit qmore.client for config <ebfa9dc> [James Lawrence]
+
 0.6.1 (03/05/2014)
 ------------------
 
