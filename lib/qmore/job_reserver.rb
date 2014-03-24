@@ -26,38 +26,33 @@ module Qmore
     end
 
     def reserve
-      realize_queues.each do |q|
-        job = q.pop
-        return job if job
+      self.clients.keys.shuffle.each do |client|
+        self.extract_queues(client, self.clients[client]).each do |q|
+          job = q.pop
+          return job if job
+        end
       end
 
       nil
     end
 
-    private
+    protected
 
-    def realize_queues
-      realized_queues = []
+    def extract_queues(client, regexes)
+      # Cache the queues so we don't make multiple calls.
+      actual_queues = client.queues
 
-      self.clients.keys.shuffle.each do |client|
-        regexes = self.clients[client]
-        # Cache the queues so we don't make multiple calls.
-        actual_queues = client.queues
+      # Grab all the actual queue names from the client.
+      queue_names = actual_queues.counts.collect {|h| h['name'] }
 
-        # Grab all the actual queue names from the client.
-        queue_names = actual_queues.counts.collect {|h| h['name'] }
+      # Match the queue names against the regexes provided.
+      matched_names = expand_queues(regexes, queue_names)
 
-        # Match the queue names against the regexes provided.
-        matched_names = expand_queues(regexes, queue_names)
+      # Prioritize the queues.
+      prioritized_names = prioritize_queues(Qmore.configuration.priority_buckets,, matched_names)
 
-        # Prioritize the queues.
-        prioritized_names = prioritize_queues(Qmore.configuration.priority_buckets, matched_names)
-
-        # add the matched queues to the resulting list.
-        realized_queues.concat(prioritized_names.collect {|name| actual_queues[name] })
-      end
-
-      realized_queues
+      # collect the matched queues names in prioritized order.
+      prioritized_names.collect {|name| actual_queues[name] }
     end
   end
 end
