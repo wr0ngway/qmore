@@ -1,5 +1,7 @@
 module Qmore::Persistence
   class Monitor
+    include GemLogger::LoggerSupport
+
     attr_reader :updating, :interval
     # @param [Qmore::persistence] persistence - responsible for reading the configuration
     # from some source (redis, file, db, etc)
@@ -21,7 +23,11 @@ module Qmore::Persistence
       Thread.new do
         while(@updating) do
           sleep @interval
-          Qmore.configuration = @persistence.load
+          begin
+            Qmore.configuration = @persistence.load
+          rescue => e
+            logger.error "#{e.class.name} : #{e.message}"
+          end
         end
       end
     end
