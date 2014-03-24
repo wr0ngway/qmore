@@ -14,8 +14,12 @@ Alternatively, if you have some other way of launching workers (e.g. qless-pool)
 
     Qless::Pool.pool_factory.reserver_class = Qmore::JobReserver
     Qmore.client == Qless::Pool.pool_factory.client
-    # Redis persistence defaults to using the Qmore.client.redis,
-    # however a completely separate redis connection may be used.
+
+    # Enabling Monitoring
+    # Redis persistence defaults to using the same connection
+    # used for reserving jobs, however it is not required that they
+    # be the same redis connection. I.e. you can store configuration
+    # on a completely separate instance of redis.
     Qmore.persistence = Qless::Persistence::Redis.new(Qmore.client.redis)
     # Configure the monitor thread with the persistence type, and the interval at which to update
     # Monitor defaults to using Qmore.persistence and 2 minutes
