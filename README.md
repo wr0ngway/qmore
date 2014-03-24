@@ -24,7 +24,7 @@ Alternatively, if you have some other way of launching workers (e.g. qless-pool)
     # Configure the monitor thread with the persistence type, and the interval at which to update
     # Monitor defaults to using Qmore.persistence and 2 minutes
     Qmore.monitor = Qless::persistence::Monitor.new(Qmore.persistence, 120)
-    # Start up monitor thread
+    # Start up monitor thread.
     Qmore.monitor.start
 
 To enable the web UI, use a config.ru similar to the following depending on your environment:
