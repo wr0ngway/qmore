@@ -5,70 +5,12 @@ describe "Attributes" do
 
   before(:each) do
     Qmore.client.redis.flushall
+    Qmore.configuration = Qmore::Configuration.new
+
     @real_queues = ["high_x", "foo", "high_y", "superhigh_z"]
   end
 
-  context "dynamic attributes" do
-
-    it "should always have a fallback pattern" do
-      get_dynamic_queues.should == {'default' => ['*']}
-    end
-
-    it "should allow setting single patterns" do
-      get_dynamic_queue('foo').should == ['*']
-      set_dynamic_queue('foo', ['bar'])
-      get_dynamic_queue('foo').should == ['bar']
-    end
-
-    it "should allow setting multiple patterns" do
-      set_dynamic_queues({'foo' => ['bar'], 'baz' => ['boo']})
-      get_dynamic_queues.should == {'foo' => ['bar'], 'baz' => ['boo'], 'default' => ['*']}
-    end
-
-    it "should remove mapping when setting empty value" do
-      get_dynamic_queues
-      set_dynamic_queues({'foo' => ['bar'], 'baz' => ['boo']})
-      get_dynamic_queues.should == {'foo' => ['bar'], 'baz' => ['boo'], 'default' => ['*']}
-
-      set_dynamic_queues({'foo' => [], 'baz' => ['boo']})
-      get_dynamic_queues.should == {'baz' => ['boo'], 'default' => ['*']}
-      set_dynamic_queues({'baz' => nil})
-      get_dynamic_queues.should == {'default' => ['*']}
-
-      set_dynamic_queues({'foo' => ['bar'], 'baz' => ['boo']})
-      set_dynamic_queue('foo', [])
-      get_dynamic_queues.should == {'baz' => ['boo'], 'default' => ['*']}
-      set_dynamic_queue('baz', nil)
-      get_dynamic_queues.should == {'default' => ['*']}
-    end
-
-  end
-
-  context "priority attributes" do
-
-    it "can lookup a default priority" do
-      get_priority_buckets.should == [{'pattern' => 'default'}]
-    end
-
-    it "can set priorities" do
-      set_priority_buckets [{'pattern' => 'foo', 'fairly' => 'false'}]
-      get_priority_buckets.should == [{'pattern' => 'foo', 'fairly' => 'false'},
-                                      {'pattern' => 'default'}]
-    end
-
-    it "can set priorities including default" do
-      set_priority_buckets [{'pattern' => 'foo', 'fairly' => false},
-                            {'pattern' => 'default', 'fairly' => false},
-                            {'pattern' => 'bar', 'fairly' => true}]
-      get_priority_buckets.should == [{'pattern' => 'foo', 'fairly' => false},
-                                      {'pattern' => 'default', 'fairly' => false},
-                                      {'pattern' => 'bar', 'fairly' => true}]
-    end
-
-  end
-
   context "basic queue patterns" do
-
     it "can specify simple queues" do
       expand_queues(["foo"], @real_queues).should == ["foo"]
       expand_queues(["foo", "bar"], @real_queues).should == ["bar", "foo"]
@@ -92,23 +34,21 @@ describe "Attributes" do
     it "can blacklist queues with pattern" do
       expand_queues(["*", "!*high*"], @real_queues).should == ["foo"]
     end
-
   end
 
-  context "redis backed queues" do
-
+  context "expanding queues" do
     it "can dynamically lookup queues" do
-      set_dynamic_queue("mykey", ["foo", "bar"])
+      Qmore.configuration.dynamic_queues = {"mykey" => ["foo", "bar"]}
       expand_queues(["@mykey"], @real_queues).should == ["bar", "foo"]
     end
 
     it "can blacklist dynamic queues" do
-      set_dynamic_queue("mykey", ["foo"])
+      Qmore.configuration.dynamic_queues["mykey"] = ["foo"]
       expand_queues(["*", "!@mykey"], @real_queues).should == ["high_x", "high_y", "superhigh_z"]
     end
 
     it "can blacklist dynamic queues with negation" do
-      set_dynamic_queue("mykey", ["!foo", "high_x"])
+      Qmore.configuration.dynamic_queues["mykey"] = ["!foo", "high_x"]
       expand_queues(["!@mykey"], @real_queues).should == ["foo"]
     end
 
@@ -120,17 +60,17 @@ describe "Attributes" do
 
     it "uses hostname as default key in dynamic queues" do
       host = `hostname`.chomp
-      set_dynamic_queue(host, ["foo", "bar"])
+      Qmore.configuration.dynamic_queues[host] = ["foo", "bar"]
       expand_queues(["@"], @real_queues).should == ["bar", "foo"]
     end
 
     it "can use wildcards in dynamic queues" do
-      set_dynamic_queue("mykey", ["*high*", "!high_y"])
+      Qmore.configuration.dynamic_queues["mykey"] = ["*high*", "!high_y"]
       expand_queues(["@mykey"], @real_queues).should == ["high_x", "superhigh_z"]
     end
 
     it "falls back to default queues when missing" do
-      set_dynamic_queue("default", ["foo", "bar"])
+      Qmore.configuration.dynamic_queues["default"] = ["foo", "bar"]
       expand_queues(["@mykey"], @real_queues).should == ["bar", "foo"]
     end
 
@@ -143,11 +83,9 @@ describe "Attributes" do
       @real_queues << "bar"
       expand_queues(["@mykey"], @real_queues).should == ["bar", "foo", "high_x", "high_y", "superhigh_z"]
     end
-
   end
 
   context "queue priorities" do
-
     it "should pick up all queues with default priority" do
       priority_buckets = [{'pattern' => 'default', 'fairly' => false}]
       prioritize_queues(priority_buckets, @real_queues).should == ["high_x", "foo", "high_y", "superhigh_z"]
@@ -229,7 +167,5 @@ describe "Attributes" do
       queues[5..-1].should == ["high_x", "foo", "high_y", "superhigh_z"]
       queues.should_not == others.sort + ["high_x", "foo", "high_y", "superhigh_z"]
     end
-
   end
-
 end

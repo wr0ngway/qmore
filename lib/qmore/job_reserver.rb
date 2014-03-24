@@ -51,7 +51,7 @@ module Qmore
         matched_names = expand_queues(regexes, queue_names)
 
         # Prioritize the queues.
-        prioritized_names = prioritize_queues(get_priority_buckets, matched_names)
+        prioritized_names = prioritize_queues(Qmore.configuration.priority_buckets, matched_names)
 
         # add the matched queues to the resulting list.
         realized_queues.concat(prioritized_names.collect {|name| actual_queues[name] })

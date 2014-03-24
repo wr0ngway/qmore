@@ -1,81 +1,8 @@
 require 'multi_json'
 
 module Qmore
-  DYNAMIC_QUEUE_KEY = "qmore:dynamic"
-  PRIORITY_KEY = "qmore:priority"
-  DYNAMIC_FALLBACK_KEY = "default"
-
   module Attributes
     extend self
-
-    def redis
-      Qmore.client.redis
-    end
-    
-    def decode(data)
-      MultiJson.load(data) if data
-    end
-    
-    def encode(data)
-      MultiJson.dump(data)
-    end
-    
-    def get_dynamic_queue(key, fallback=['*'])
-      data = redis.hget(DYNAMIC_QUEUE_KEY, key)
-      queue_names = decode(data)
-
-      if queue_names.nil? || queue_names.size == 0
-        data = redis.hget(DYNAMIC_QUEUE_KEY, DYNAMIC_FALLBACK_KEY)
-        queue_names = decode(data)
-      end
-      
-      if queue_names.nil? || queue_names.size == 0
-        queue_names = fallback
-      end
-
-      return queue_names
-    end
-
-    def set_dynamic_queue(key, values)
-      if values.nil? or values.size == 0
-        redis.hdel(DYNAMIC_QUEUE_KEY, key)
-      else
-        redis.hset(DYNAMIC_QUEUE_KEY, key, encode(values))
-      end
-    end
-    
-    def set_dynamic_queues(dynamic_queues)
-      redis.multi do
-        redis.del(DYNAMIC_QUEUE_KEY)
-        dynamic_queues.each do |k, v|
-          set_dynamic_queue(k, v)
-        end
-      end
-    end
-
-    def get_dynamic_queues
-      result = {}
-      queues = redis.hgetall(DYNAMIC_QUEUE_KEY)
-      queues.each {|k, v| result[k] = decode(v) }
-      result[DYNAMIC_FALLBACK_KEY] ||= ['*']
-      return result
-    end
-    
-    def get_priority_buckets
-      priorities = Array(redis.lrange(PRIORITY_KEY, 0, -1))
-      priorities = priorities.collect {|p| decode(p) }
-      priorities << {'pattern' => 'default'} unless priorities.find {|b| b['pattern'] == 'default' }
-      return priorities
-    end
-
-    def set_priority_buckets(data)
-      redis.multi do
-        redis.del(PRIORITY_KEY)
-        Array(data).each do |v|
-           redis.rpush(PRIORITY_KEY, encode(v))
-        end
-      end
-    end
 
     # Returns a list of queues to use when searching for a job.
     #
@@ -93,7 +20,7 @@ module Qmore
     def expand_queues(queue_patterns, real_queues)
       queue_patterns = queue_patterns.dup
       real_queues = real_queues.dup
-      
+
       matched_queues = []
 
       while q = queue_patterns.shift
@@ -103,7 +30,7 @@ module Qmore
           key = $2.strip
           key = Socket.gethostname if key.size == 0
 
-          add_queues = get_dynamic_queue(key)
+          add_queues = Qmore.configuration.dynamic_queues[key]
           add_queues.map! { |q| q.gsub!(/^!/, '') || q.gsub!(/^/, '!') } if $1
 
           queue_patterns.concat(add_queues)
@@ -149,34 +76,34 @@ module Qmore
         end
 
         bucket_queues, remaining = [], []
-        
+
         patterns = bucket_pattern.split(',')
         patterns.each do |pattern|
           pattern = pattern.strip
-          
+
           if pattern =~ /^!/
             negated = true
             pattern = pattern[1..-1]
           end
-          
+
           patstr = pattern.gsub(/\*/, ".*")
           pattern = /^#{patstr}$/
-        
-        
+
+
           if negated
             bucket_queues -= bucket_queues.grep(pattern)
           else
             bucket_queues.concat(real_queues.grep(pattern))
           end
-        
+
         end
-        
+
         bucket_queues.uniq!
         bucket_queues.shuffle! if fairly
         real_queues = real_queues - bucket_queues
-        
+
         result << bucket_queues
-        
+
       end
 
       # insert the remaining queues at the position the default item was at (or last)
@@ -186,6 +113,6 @@ module Qmore
 
       return result
     end
-    
+
   end
 end

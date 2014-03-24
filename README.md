@@ -14,12 +14,19 @@ Alternatively, if you have some other way of launching workers (e.g. qless-pool)
 
     Qless::Pool.pool_factory.reserver_class = Qmore::JobReserver
     Qmore.client == Qless::Pool.pool_factory.client
+    # Redis persistance defaults to using the Qmore.client.
+    Qmore.persistance = Qless::Persistance::Redis.new(Qmore.client.redis)
+    # Configure the monitor thread with the persistance type, and the interval at which to update
+    # Monitor defaults to using Qmore.persistance and 2 minutes
+    Qmore.monitor = Qless::persistance::Monitor.new(Qmore.persistance, 120)
+    # Start up monitor thread
+    Qmore.monitor.start
 
 To enable the web UI, use a config.ru similar to the following depending on your environment:
 
     require 'qless/server'
     require 'qmore-server'
-    
+
     Qless::Server.client = Qless::Client.new(:host => "some-host", :port => 7000)
     Qmore.client = Qless::Server.client
     run Qless::Server.new(Qmore.client)
@@ -94,18 +101,18 @@ And I run my worker with QUEUES=\*
 
 If I set my patterns like:
 
-high\_\* (fairly unchecked)  
-default (fairly unchecked)  
-low\_\* (fairly unchecked)  
+high\_\* (fairly unchecked)
+default (fairly unchecked)
+low\_\* (fairly unchecked)
 
 Then, the worker will scan the queues for work in this order:
 high_bar, high_baz, high_foo, myqueue, otherqueue, somequeue, low_bar, low_baz, low_foo
 
 If I set my patterns like:
 
-high\_\* (fairly checked)  
-default (fairly checked)  
-low\_\* (fairly checked)  
+high\_\* (fairly checked)
+default (fairly checked)
+low\_\* (fairly checked)
 
 Then, the worker will scan the queues for work in this order:
 
