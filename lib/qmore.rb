@@ -1,7 +1,7 @@
 require 'qless'
 require 'qless/worker'
 require 'qmore/configuration'
-require 'qmore/persistance'
+require 'qmore/persistence'
 require 'qmore/attributes'
 require 'qmore/job_reserver'
 
@@ -16,23 +16,23 @@ module Qmore
   end
 
   def self.configuration
-    @configuration ||= Qmore.persistance.load
+    @configuration ||= Qmore::LegacyConfiguration.new(Qmore.persistence)
   end
 
   def self.configuration=(configuration)
     @configuration = configuration
   end
 
-  def self.persistance
-    @persistance ||= Qmore::Persistance::Redis.new(self.client.redis)
+  def self.persistence
+    @persistence ||= Qmore::Persistence::Redis.new(self.client.redis)
   end
 
-  def self.persistance=(manager)
-    @persistance = manager
+  def self.persistence=(manager)
+    @persistence = manager
   end
 
   def self.monitor
-    @monitor ||= Qmore::Persistance::Monitor.new(self.persistance, 120)
+    @monitor ||= Qmore::Persistence::Monitor.new(self.persistence, 120)
   end
 
   def self.monitor=(monitor)

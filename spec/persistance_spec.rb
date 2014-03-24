@@ -1,21 +1,21 @@
 require "spec_helper"
 
-describe "Qmore::Persistance::Monitor" do
+describe "Qmore::Persistence::Monitor" do
   before(:each) do
     Qmore.client.redis.flushall
   end
 
   it "updates periodically based on the interval" do
-    persistance = double("Qmore::Persistance::Redis")
+    persistance = double("Qmore::Persistence::Redis")
     persistance.should_receive(:load).at_least(3)
-    monitor = Qmore::Persistance::Monitor.new(persistance, 1)
+    monitor = Qmore::Persistence::Monitor.new(persistance, 1)
     monitor.start
     sleep 4
     monitor.stop
   end
 end
 
-describe "Qmore::Persistance::Redis" do
+describe "Qmore::Persistence::Redis" do
   before(:each) do
     Qmore.client.redis.flushall
   end
@@ -31,7 +31,7 @@ describe "Qmore::Persistance::Redis" do
 
       configuration = Qmore::Configuration.new
       configuration.dynamic_queues = queues
-      persistance = Qmore::Persistance::Redis.new(Qmore.client.redis)
+      persistance = Qmore::Persistence::Redis.new(Qmore.client.redis)
       persistance.write(configuration)
 
       actual_configuration = persistance.load
@@ -46,7 +46,7 @@ describe "Qmore::Persistance::Redis" do
       configuration = Qmore::Configuration.new
       configuration.priority_buckets = priorities
 
-      persistance = Qmore::Persistance::Redis.new(Qmore.client.redis)
+      persistance = Qmore::Persistence::Redis.new(Qmore.client.redis)
       persistance.write(configuration)
 
       actual_configuration = persistance.load

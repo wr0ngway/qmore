@@ -45,4 +45,30 @@ module Qmore
       end
     end
   end
+
+  # Legacy style configuration which loads the configuration on each access.
+  class LegacyConfiguration
+    def initialize(persistence)
+      @configuration = Configuration.new
+      @persistence = persistence
+    end
+
+    def dynamic_queues=(hash)
+      @configuration.dynamic_queues = hash
+    end
+
+    def priority_buckets=(priorities)
+      @configuration.priority_buckets = priorities
+    end
+
+    def priority_buckets
+      @configuration.priority_buckets = @persistence.read_priority_buckets
+      @configuration.priority_buckets
+    end
+
+    def dynamic_queues
+      @configuration.dynamic_queues = @persistence.read_dynamic_queues
+      @configuration.dynamic_queues
+    end
+  end
 end

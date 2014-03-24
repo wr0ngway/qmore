@@ -1,5 +1,39 @@
 require "spec_helper"
 
+describe "Qmore::LegacyConfiguration" do
+  it "should always have a fallback pattern" do
+    configuration = Qmore::LegacyConfiguration.new(Qmore.persistence)
+
+    configuration.dynamic_queues['default'].should == ['*']
+  end
+
+  it "should load the latest dynamic queues from persistence" do
+    configuration = Qmore::LegacyConfiguration.new(Qmore.persistence)
+    expected_configuration = Qmore::Configuration.new
+
+    expected_configuration.dynamic_queues["foo"] = ["bar"]
+    expected_configuration.dynamic_queues["baz"] = ["biz"]
+    Qmore.persistence.write(expected_configuration)
+    configuration.dynamic_queues.should == expected_configuration.dynamic_queues
+
+    expected_configuration.dynamic_queues["baz"] = []
+    Qmore.persistence.write(expected_configuration)
+    # Ensuring baz was removed
+    configuration.dynamic_queues.should == {"foo" => ["bar"], "default" => ["*"]}
+    configuration.dynamic_queues.should == expected_configuration.dynamic_queues
+  end
+
+  it "should load the latest priority buckets from persistence" do
+    configuration = Qmore::LegacyConfiguration.new(Qmore.persistence)
+    expected_configuration = Qmore::Configuration.new
+    expected_configuration.priority_buckets = [{'pattern' => 'foo', 'fairly' => 'false'}]
+
+    Qmore.persistence.write(expected_configuration)
+
+    configuration.priority_buckets.should == expected_configuration.priority_buckets
+  end
+end
+
 describe "Qmore::Configuration" do
   before(:each) do
     Qmore.client.redis.flushall

@@ -14,11 +14,12 @@ Alternatively, if you have some other way of launching workers (e.g. qless-pool)
 
     Qless::Pool.pool_factory.reserver_class = Qmore::JobReserver
     Qmore.client == Qless::Pool.pool_factory.client
-    # Redis persistance defaults to using the Qmore.client.
-    Qmore.persistance = Qless::Persistance::Redis.new(Qmore.client.redis)
-    # Configure the monitor thread with the persistance type, and the interval at which to update
-    # Monitor defaults to using Qmore.persistance and 2 minutes
-    Qmore.monitor = Qless::persistance::Monitor.new(Qmore.persistance, 120)
+    # Redis persistence defaults to using the Qmore.client.redis,
+    # however a completely separate redis connection may be used.
+    Qmore.persistence = Qless::Persistence::Redis.new(Qmore.client.redis)
+    # Configure the monitor thread with the persistence type, and the interval at which to update
+    # Monitor defaults to using Qmore.persistence and 2 minutes
+    Qmore.monitor = Qless::persistence::Monitor.new(Qmore.persistence, 120)
     # Start up monitor thread
     Qmore.monitor.start
 

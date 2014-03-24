@@ -49,6 +49,7 @@ describe "Qmore Server" do
       it "should shows names of queues" do
         Qmore.configuration.dynamic_queues["key_one"] = ["foo"]
         Qmore.configuration.dynamic_queues["key_two"] = ["bar"]
+        Qmore.persistence.write(Qmore.configuration)
 
         get "/dynamicqueues"
 
@@ -59,6 +60,7 @@ describe "Qmore Server" do
       it "should shows values of queues" do
         Qmore.configuration.dynamic_queues["key_one"] = ["foo"]
         Qmore.configuration.dynamic_queues["key_two"] = ["bar", "baz"]
+        Qmore.persistence.write(Qmore.configuration)
 
         get "/dynamicqueues"
 
@@ -72,6 +74,7 @@ describe "Qmore Server" do
 
       it "should show remove link for queue" do
         Qmore.configuration.dynamic_queues["key_one"] = ["foo"]
+        Qmore.persistence.write(Qmore.configuration)
 
         get "/dynamicqueues"
 
@@ -97,6 +100,8 @@ describe "Qmore Server" do
       it "should show input fields" do
         Qmore.configuration.dynamic_queues["key_one"] = ["foo"]
         Qmore.configuration.dynamic_queues["key_two"] = ["bar", "baz"]
+        Qmore.persistence.write(Qmore.configuration)
+
         get "/dynamicqueues"
 
         last_response.body.should match /<input type="text" id="input-0-name" name="queues\[\]\[name\]" value="key_one"/
@@ -107,6 +112,9 @@ describe "Qmore Server" do
 
       it "should delete queues on empty queue submit" do
         Qmore.configuration.dynamic_queues["key_two"] = ["bar", "baz"]
+        Qmore.persistence.write(Qmore.configuration)
+        Qmore.persistence.load.dynamic_queues.has_key?("key_two").should == true
+
         post "/dynamicqueues", {'queues' => [{'name' => "key_two", "value" => ""}]}
 
         last_response.should be_redirect
@@ -124,6 +132,8 @@ describe "Qmore Server" do
 
       it "should update queues" do
         Qmore.configuration.dynamic_queues["key_two"] = ["bar", "baz"]
+        Qmore.persistence.write(Qmore.configuration)
+
         post "/dynamicqueues", {'queues' => [{'name' => "key_two", "value" => "foo,bar,baz"}]}
 
         last_response.should be_redirect
@@ -157,6 +167,7 @@ describe "Qmore Server" do
         Qmore.configuration.priority_buckets = [{'pattern' => 'foo', 'fairly' => false},
                                                 {'pattern' => 'default', 'fairly' => false},
                                                 {'pattern' => 'bar', 'fairly' => true}]
+        Qmore.persistence.write(Qmore.configuration)
       end
 
       it "should shows pattern input fields" do
@@ -183,6 +194,7 @@ describe "Qmore Server" do
         Qmore.configuration.priority_buckets = [{'pattern' => 'foo', 'fairly' => false},
                                                 {'pattern' => 'default', 'fairly' => false},
                                                 {'pattern' => 'bar', 'fairly' => true}]
+        Qmore.persistence.write(Qmore.configuration)
       end
 
       it "should show remove link for queue" do

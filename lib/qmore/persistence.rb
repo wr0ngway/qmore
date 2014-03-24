@@ -1,12 +1,12 @@
-module Qmore::Persistance
+module Qmore::Persistence
   class Monitor
     attr_reader :updating, :interval
-    # @param [Qmore::Persistance] persistance - responsible for reading the configuration
+    # @param [Qmore::persistence] persistence - responsible for reading the configuration
     # from some source (redis, file, db, etc)
     # @param [Integer] interval - the period, in seconds, to wait between updates to the configuration.
     # defaults to 1 minute
-    def initialize(persistance, interval)
-      @persistance = persistance
+    def initialize(persistence, interval)
+      @persistence = persistence
       @interval = interval
     end
 
@@ -14,14 +14,14 @@ module Qmore::Persistance
       return if @updating
       @updating = true
 
-      # Ensure we load the configuration once from persistance before
+      # Ensure we load the configuration once from persistence before
       # the background thread.
-      Qmore.configuration = @persistance.load
+      Qmore.configuration = @persistence.load
 
       Thread.new do
         while(@updating) do
           sleep @interval
-          Qmore.configuration = @persistance.load
+          Qmore.configuration = @persistence.load
         end
       end
     end
@@ -64,8 +64,6 @@ module Qmore::Persistance
       write_dynamic_queues(configuration.dynamic_queues)
       write_priority_buckets(configuration.priority_buckets)
     end
-
-    protected
 
     def read_dynamic_queues
       result = {}

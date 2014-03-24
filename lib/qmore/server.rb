@@ -34,7 +34,11 @@ module Qmore
       app.get "/dynamicqueues" do
         @queues = []
         real_queues = Qmore.client.queues.counts.collect {|q| q['name'] }
-        dqueues = Qmore.configuration.dynamic_queues
+
+        # For the UI we always want the latest persisted data
+        configuration = Qmore.persistence.load
+
+        dqueues = configuration.dynamic_queues
         dqueues.each do |k, v|
           expanded = Attr.expand_queues(["@#{k}"], real_queues)
           expanded = expanded.collect { |q| q.split(":").last }
@@ -70,8 +74,12 @@ module Qmore
           queues[key] = values
         end
 
-        Qmore.configuration.dynamic_queues = queues
-        Qmore.persistance.write(Qmore.configuration)
+        # For the UI we always want the latest persisted data
+        configuration = Qmore.persistence.load
+        configuration.dynamic_queues = queues
+
+        Qmore.persistence.write(configuration)
+        Qmore.configuration.dynamic_queues = configuration.dynamic_queues
 
         redirect to("/dynamicqueues")
       end
@@ -81,19 +89,25 @@ module Qmore
       #
 
       app.get "/queuepriority" do
-        @priorities = Qmore.configuration.priority_buckets
+        # For the UI we always want the latest persisted data
+        configuration = Qmore.persistence.load
+
+        @priorities = configuration.priority_buckets
         qmore_view :priorities
       end
 
       app.post "/queuepriority" do
         priorities = params['priorities']
 
-        Qmore.configuration.priority_buckets = priorities
-        Qmore.persistance.write(Qmore.configuration)
+        # For the UI we always want the latest persisted data
+        configuration = Qmore.persistence.load
+        configuration.priority_buckets = priorities
+
+        Qmore.persistence.write(configuration)
+        Qmore.configuration.priority_buckets = configuration.priority_buckets
 
         redirect to("/queuepriority")
       end
-
     end
   end
 end
