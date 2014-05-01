@@ -5,6 +5,7 @@ describe "JobReserver" do
 
   before(:each) do
     Qmore.client.redis.flushall
+    Qmore.configuration = Qmore::Configuration.new
   end
 
   context "multiple qless server environment" do
@@ -91,7 +92,7 @@ describe "JobReserver" do
     end
 
     it "handles priorities" do
-      set_priority_buckets [{'pattern' => 'foo*', 'fairly' => false},
+      Qmore.configuration.priority_buckets = [{'pattern' => 'foo*', 'fairly' => false},
                             {'pattern' => 'default', 'fairly' => false},
                             {'pattern' => 'bar', 'fairly' => true}]
 

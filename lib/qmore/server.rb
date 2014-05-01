@@ -8,7 +8,7 @@ module Qmore
     def self.registered(app)
 
       app.helpers do
-        
+
         def qmore_view(filename, options = {}, locals = {})
           options = {:layout => true, :locals => { :title => filename.to_s.capitalize }}.merge(options)
           dir = File.expand_path("../server/views/", __FILE__)
@@ -24,7 +24,7 @@ module Qmore
           queue_tab_index = original_tabs.index {|t| t[:name] == 'Queues' }
           original_tabs.insert(queue_tab_index + 1, *qmore_tabs)
         end
-        
+
       end
 
       #
@@ -34,7 +34,11 @@ module Qmore
       app.get "/dynamicqueues" do
         @queues = []
         real_queues = Qmore.client.queues.counts.collect {|q| q['name'] }
-        dqueues = Attr.get_dynamic_queues
+
+        # For the UI we always want the latest persisted data
+        configuration = Qmore.persistence.load
+
+        dqueues = configuration.dynamic_queues
         dqueues.each do |k, v|
           expanded = Attr.expand_queues(["@#{k}"], real_queues)
           expanded = expanded.collect { |q| q.split(":").last }
@@ -69,7 +73,14 @@ module Qmore
           values = queue['value'].to_s.split(',').collect { |q| q.gsub(/\s/, '') }
           queues[key] = values
         end
-        Attr.set_dynamic_queues(queues)
+
+        # For the UI we always want the latest persisted data
+        configuration = Qmore.persistence.load
+        configuration.dynamic_queues = queues
+
+        Qmore.persistence.write(configuration)
+        Qmore.configuration.dynamic_queues = configuration.dynamic_queues
+
         redirect to("/dynamicqueues")
       end
 
@@ -78,16 +89,25 @@ module Qmore
       #
 
       app.get "/queuepriority" do
-        @priorities = Attr.get_priority_buckets
+        # For the UI we always want the latest persisted data
+        configuration = Qmore.persistence.load
+
+        @priorities = configuration.priority_buckets
         qmore_view :priorities
       end
 
       app.post "/queuepriority" do
         priorities = params['priorities']
-        Attr.set_priority_buckets priorities
+
+        # For the UI we always want the latest persisted data
+        configuration = Qmore.persistence.load
+        configuration.priority_buckets = priorities
+
+        Qmore.persistence.write(configuration)
+        Qmore.configuration.priority_buckets = configuration.priority_buckets
+
         redirect to("/queuepriority")
       end
-
     end
   end
 end
