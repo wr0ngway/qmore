@@ -40,6 +40,23 @@ describe "JobReserver" do
   end
 
   context "basic qless behavior still works" do
+    it "ignores queues that have no work available" do
+      no_work_queue = Qmore.client.queues['no-work']
+      has_work_queue = Qmore.client.queues['has-work']
+
+      no_work_queue.put(SomeJob, [])
+      has_work_queue.put(SomeJob, [])
+
+      # drain the no work queue
+      no_work_queue.pop
+
+      reserver = Qmore::JobReserver.new([no_work_queue, has_work_queue])
+
+      queues = reserver.extract_queues(Qmore.client, ["*"]).collect(&:name)
+      queues.should include("has-work")
+      queues.should_not include("no-work")
+    end
+
     it "can reserve from multiple queues" do
       high_queue = Qmore.client.queues['high']
       critical_queue = Qmore.client.queues['critical']
