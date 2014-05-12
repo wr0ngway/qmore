@@ -43,7 +43,7 @@ module Qmore
       # Cache the queues so we don't make multiple calls.
       # and remove any queues that don't have work.
       actual_queues = client.queues.counts.reject do |queue|
-        total = %w(waiting recurring depends stalled scheduled).inject(0) { |sum, state| sum += queue[state].to_i }
+        total = %w(waiting recurring depends throttled stalled scheduled).inject(0) { |sum, state| sum += queue[state].to_i }
         total == 0
       end
 
