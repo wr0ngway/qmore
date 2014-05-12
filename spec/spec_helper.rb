@@ -6,7 +6,7 @@ Coveralls.wear!
 require 'qmore'
 
 redis_configs_directory = File.join(File.dirname(File.expand_path(__FILE__)), "redis")
-redis_configs = Dir.entries(redis_configs_directory).select{|f| !File.directory? f}
+redis_configs = Dir.entries(redis_configs_directory).select{|f| !File.directory?(f) && f.end_with?(".conf")}
 
 redis_configs.each do |config|
   redis_cmd = "redis-server #{redis_configs_directory}/#{config}"

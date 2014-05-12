@@ -6,9 +6,9 @@ describe "Qmore::Persistence::Monitor" do
   end
 
   it "updates periodically based on the interval" do
-    persistance = double("Qmore::Persistence::Redis")
-    persistance.should_receive(:load).at_least(3)
-    monitor = Qmore::Persistence::Monitor.new(persistance, 1)
+    persistence = Qmore::Persistence::Redis.new(Qmore.client.redis)
+    persistence.should_receive(:load).at_least(3)
+    monitor = Qmore::Persistence::Monitor.new(persistence, 1)
     monitor.start
     sleep 4
     monitor.stop
@@ -31,10 +31,10 @@ describe "Qmore::Persistence::Redis" do
 
       configuration = Qmore::Configuration.new
       configuration.dynamic_queues = queues
-      persistance = Qmore::Persistence::Redis.new(Qmore.client.redis)
-      persistance.write(configuration)
+      persistence = Qmore::Persistence::Redis.new(Qmore.client.redis)
+      persistence.write(configuration)
 
-      actual_configuration = persistance.load
+      actual_configuration = persistence.load
 
       configuration.dynamic_queues.should == actual_configuration.dynamic_queues
     end
@@ -46,10 +46,10 @@ describe "Qmore::Persistence::Redis" do
       configuration = Qmore::Configuration.new
       configuration.priority_buckets = priorities
 
-      persistance = Qmore::Persistence::Redis.new(Qmore.client.redis)
-      persistance.write(configuration)
+      persistence = Qmore::Persistence::Redis.new(Qmore.client.redis)
+      persistence.write(configuration)
 
-      actual_configuration = persistance.load
+      actual_configuration = persistence.load
       configuration.priority_buckets.should == actual_configuration.priority_buckets
     end
   end
