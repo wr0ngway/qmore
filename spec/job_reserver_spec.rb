@@ -14,8 +14,8 @@ describe "JobReserver" do
       qless2 = Qless::Client.new(:redis => Redis.connect(:port => 6380))
       queue_a = qless1.queues["a"]
       queue_b = qless2.queues["b"]
-      queue_a.put(SomeJob, [])
-      queue_b.put(SomeJob, [])
+      queue_a.put(SomeJob, {})
+      queue_b.put(SomeJob, {})
 
       queue_a.length.should == 1
       queue_b.length.should == 1
@@ -40,12 +40,88 @@ describe "JobReserver" do
   end
 
   context "basic qless behavior still works" do
+    it "ignores queues that have no work available" do
+      no_work_queue = Qmore.client.queues['no-work']
+      has_work_queue = Qmore.client.queues['has-work']
+
+      no_work_queue.put(SomeJob, {})
+      has_work_queue.put(SomeJob, {})
+
+      # drain the no work queue
+      no_work_queue.pop
+
+      reserver = Qmore::JobReserver.new([no_work_queue, has_work_queue])
+
+      queues = reserver.extract_queues(Qmore.client, ["*"]).collect(&:name)
+      queues.should include("has-work")
+      queues.should_not include("no-work")
+    end
+
+    it "should not ignore queues that have work in scheduled state" do
+      work_queue = Qmore.client.queues['work']
+      work_queue.put(SomeJob, {}, {:delay => 1600})
+
+      %w(waiting recurring depends stalled).each do |state|
+        work_queue.counts[state].should equal(0)
+      end
+      work_queue.counts["scheduled"].should equal(1)
+
+      reserver = Qmore::JobReserver.new([work_queue])
+      queues = reserver.extract_queues(Qmore.client, ["*"]).collect(&:name)
+      queues.should include("work")
+    end
+
+    it "should not ignore queues that have work in the depends state" do
+      work_queue = Qmore.client.queues['work']
+      jid = work_queue.put(SomeJob, {})
+      work_queue.put(SomeJob, {}, {:depends => [jid]})
+
+      work_queue.pop
+
+      %w(waiting recurring stalled scheduled).each do |state|
+        work_queue.counts[state].should equal(0)
+      end
+      work_queue.counts["depends"].should equal(1)
+
+      reserver = Qmore::JobReserver.new([work_queue])
+      queues = reserver.extract_queues(Qmore.client, ["*"]).collect(&:name)
+      queues.should include("work")
+    end
+
+    it "should not ignore queues that have work in the recurring state" do
+      work_queue = Qmore.client.queues['work']
+      work_queue.recur(SomeJob, {}, 1000)
+
+      %w(waiting depends stalled scheduled).each do |state|
+        work_queue.counts[state].should equal(0)
+      end
+      work_queue.counts["recurring"].should equal(1)
+
+      reserver = Qmore::JobReserver.new([work_queue])
+      queues = reserver.extract_queues(Qmore.client, ["*"]).collect(&:name)
+      queues.should include("work")
+    end
+
+    it "should not ignore queues that have work in the waiting state" do
+      work_queue = Qmore.client.queues['work']
+      work_queue.put(SomeJob, {})
+
+      %w(recurring depends stalled scheduled).each do |state|
+        work_queue.counts[state].should equal(0)
+      end
+      work_queue.counts["waiting"].should equal(1)
+
+      reserver = Qmore::JobReserver.new([work_queue])
+      queues = reserver.extract_queues(Qmore.client, ["*"]).collect(&:name)
+      queues.should include("work")
+    end
+
     it "can reserve from multiple queues" do
       high_queue = Qmore.client.queues['high']
       critical_queue = Qmore.client.queues['critical']
 
-      high_queue.put(SomeJob, [])
-      critical_queue.put(SomeJob, [])
+      high_queue.put(SomeJob, {})
+      critical_queue.put(SomeJob, {})
 
       reserver = Qmore::JobReserver.new([critical_queue, high_queue])
 
@@ -56,8 +132,8 @@ describe "JobReserver" do
     it "can work on multiple queues" do
       high_queue = Qmore.client.queues['high']
       critical_queue = Qmore.client.queues['critical']
-      high_queue.put(SomeJob, [])
-      critical_queue.put(SomeJob, [])
+      high_queue.put(SomeJob, {})
+      critical_queue.put(SomeJob, {})
 
       high_queue.length.should == 1
       critical_queue.length.should == 1
@@ -76,7 +152,7 @@ describe "JobReserver" do
       queues = []
       ['high', 'critical', 'blahblah'].each do |q|
         queue = Qmore.client.queues[q]
-        queue.put(SomeJob, [])
+        queue.put(SomeJob, {})
         queue.length.should == 1
         queues << queue
       end
@@ -100,7 +176,7 @@ describe "JobReserver" do
       queues = []
       ['other', 'blah', 'foobie', 'bar', 'foo'].each do |q|
         queue = Qmore.client.queues[q]
-        queue.put(SomeJob, [])
+        queue.put(SomeJob, {})
         queue.length.should == 1
         queues << queue
       end

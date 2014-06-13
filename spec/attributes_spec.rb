@@ -59,8 +59,9 @@ describe "Attributes" do
     end
 
     it "uses hostname as default key in dynamic queues" do
-      host = `hostname`.chomp
+      host = Socket.gethostname
       Qmore.configuration.dynamic_queues[host] = ["foo", "bar"]
+
       expand_queues(["@"], @real_queues).should == ["bar", "foo"]
     end
 

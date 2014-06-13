@@ -36,14 +36,19 @@ module Qmore
       nil
     end
 
-    protected
-
+    # @param [Qless::Client] client - client to pull queues from.
+    # @param [Array] regexes - array of regular expressions to match
+    # queues against.
     def extract_queues(client, regexes)
       # Cache the queues so we don't make multiple calls.
-      actual_queues = client.queues
+      # and remove any queues that don't have work.
+      actual_queues = client.queues.counts.reject do |queue|
+        total = %w(waiting recurring depends stalled scheduled).inject(0) { |sum, state| sum += queue[state].to_i }
+        total == 0
+      end
 
       # Grab all the actual queue names from the client.
-      queue_names = actual_queues.counts.collect {|h| h['name'] }
+      queue_names = actual_queues.collect {|h| h['name'] }
 
       # Match the queue names against the regexes provided.
       matched_names = expand_queues(regexes, queue_names)
@@ -52,7 +57,7 @@ module Qmore
       prioritized_names = prioritize_queues(Qmore.configuration.priority_buckets, matched_names)
 
       # collect the matched queues names in prioritized order.
-      prioritized_names.collect {|name| actual_queues[name] }
+      prioritized_names.collect {|name| client.queues[name] }
     end
   end
 end
