@@ -1,3 +1,10 @@
+0.6.3 (06/13/2014)
+------------------
+
+Prevents updating configuration every time we want to retrieve queues.
+(see monitoring in README)
+Optimizations to job reserving - doesn't look at empty queues.
+
 0.6.2 (03/10/2014)
 ------------------
 
