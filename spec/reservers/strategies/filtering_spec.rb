@@ -52,10 +52,10 @@ describe "Reservers::Strategies::Filtering" do
 
       filter = Qmore::Reservers::Strategies::Filtering.default(queues, ['*', '!blah'])
 
-      expect(filter.next.name).to be('foo')
-      expect(filter.next.name).to be('foobie')
-      expect(filter.next.name).to be('other')
-      expect(filter.next.name).to be('bar')
+      expect(filter.next.name).to eq('foo')
+      expect(filter.next.name).to eq('foobie')
+      expect(filter.next.name).to eq('other')
+      expect(filter.next.name).to eq('bar')
       expect { filter.next }.to raise_error(StopIteration)
     end
   end
