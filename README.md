@@ -8,11 +8,11 @@ Authored against Qless 0.9.3, so it at least works with that - try running the t
 Usage
 -----
 
-To use the rake tasks built into qless, just adding qless to your Gemfile should cause it to get required before the task executes.  If you aren't using a gemfile, then you'll need to require qmore directly so that it sets up ENV['JOB_RESERVER'] to use Qmore::JobReserver.
+To use the rake tasks built into qless, just adding qless to your Gemfile should cause it to get required before the task executes.  If you aren't using a gemfile, then you'll need to require qmore directly so that it sets up ENV['JOB_RESERVER'] to use Qmore::Reservers::Default.
 
 Alternatively, if you have some other way of launching workers (e.g. qless-pool), you can assign the reserver explicitly in the setup rake task or some other initializer:
 
-    Qless::Pool.pool_factory.reserver_class = Qmore::JobReserver
+    Qless::Pool.pool_factory.reserver_class = Qmore::Reservers::Default
     Qmore.client == Qless::Pool.pool_factory.client
 
     # Enabling Monitoring
@@ -129,3 +129,4 @@ Contributors
 
 Matt Conway ( https://github.com/wr0ngway )
 Bert Goethals ( https://github.com/Bertg )
+James Lawrence ( https://github.com/jambli )
