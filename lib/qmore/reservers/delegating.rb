@@ -10,6 +10,14 @@ module Qmore::Reservers
       # nothing here on purpose
     end
 
+    def queues
+      Enumerator.new do |yielder|
+        reservers.each do |reserver|
+          reserver.queues.each {|queue| yielder << queue}
+        end
+      end
+    end
+
     def reserve
       reservers.each do |reserver|
         if (job = reserver.reserve)
