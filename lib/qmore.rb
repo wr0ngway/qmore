@@ -5,10 +5,8 @@ require 'qmore/configuration'
 require 'qmore/persistence'
 require 'qmore/attributes'
 require 'qmore/reservers'
-require 'qmore/job_reserver'
 
 module Qmore
-
   def self.client=(client)
     @client = client
   end
@@ -44,7 +42,7 @@ end
 
 module Qless
   module JobReservers
-    QmoreReserver = Qmore::JobReserver
+    QmoreReserver = Qmore::Reservers::Default
   end
 end
 ENV['JOB_RESERVER'] ||= 'QmoreReserver'
