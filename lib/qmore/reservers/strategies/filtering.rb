@@ -8,19 +8,19 @@ module Qmore::Reservers::Strategies
     def self.default(queues, regexes)
       Enumerator.new do |yielder|
         # Map queues to their names
-        queues = queues.reduce({}) do |hash,queue|
+        mapped_queues = queues.reduce({}) do |hash,queue|
           hash[queue.name] = queue
           hash
         end
 
         # Filter the queue names against the regexes provided.
-        matches = Filtering.expand_queues(regexes, queues.keys)
+        matches = Filtering.expand_queues(regexes, mapped_queues.keys)
 
         # Prioritize the queues.
         prioritized_names = Filtering.prioritize_queues(Qmore.configuration.priority_buckets, matches)
 
         prioritized_names.each do |name|
-          yielder << queues[name]
+          yielder << mapped_queues[name]
         end
       end
     end
