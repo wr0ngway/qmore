@@ -1,3 +1,18 @@
+0.7.0 (06/23/2014)
+
+Refactoring of qmore reserver to break it into its component pieces
+making it more flexible.
+
+Added strategies for the reservers:
+Sources - where we pull the Qless::Queue from (Enumeration that returns Qless:Queue)
+Filters - filters out queues from Sources based on some criteria (acts as a Source)
+Ordering- Reorders the results of an iteration through an enumeration.
+
+Added a Delegating Reserver which delegates down to a collect of reservers to
+find jobs.
+
+Added Background Source which updates its available queues asynchronously
+
 0.6.3 (06/13/2014)
 ------------------
 
