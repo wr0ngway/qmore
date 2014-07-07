@@ -1,4 +1,5 @@
 0.7.0 (06/23/2014)
+------------------
 
 Refactoring of qmore reserver to break it into its component pieces
 making it more flexible.
