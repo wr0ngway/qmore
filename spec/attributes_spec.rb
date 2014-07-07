@@ -164,9 +164,9 @@ describe "Attributes" do
       priority_buckets = [{'pattern' => 'other*', 'fairly' => true},
                           {'pattern' => 'default', 'fairly' => false}]
       queues = prioritize_queues(priority_buckets, @real_queues)
-      queues[0..4].sort.should == others.sort
-      queues[5..-1].should == ["high_x", "foo", "high_y", "superhigh_z"]
-      queues.should_not == others.sort + ["high_x", "foo", "high_y", "superhigh_z"]
+      (queues[0..4].sort).to eq(others.sort)
+      queues[5..-1].to eq(["high_x", "foo", "high_y", "superhigh_z"])
+      expect(queues).not_to eq(others.sort + ["high_x", "foo", "high_y", "superhigh_z"])
     end
   end
 end
