@@ -20,7 +20,10 @@ module Qmore::Reservers::Strategies
         prioritized_names = Filtering.prioritize_queues(Qmore.configuration.priority_buckets, matches)
 
         prioritized_names.each do |name|
-          yielder << mapped_queues[name]
+          queue = mapped_queues[name]
+          if queue
+            yielder << queue
+          end
         end
       end
     end

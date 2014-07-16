@@ -42,8 +42,7 @@ describe "Reservers::Strategies::Filtering" do
                             {'pattern' => 'default', 'fairly' => false},
                             {'pattern' => 'bar', 'fairly' => true}]
 
-      queues = []
-      ['other', 'blah', 'foobie', 'bar', 'foo'].each do |q|
+      queues = ['other', 'blah', 'foobie', 'bar', 'foo'].reduce([]) do |queues, q|
         queue = Qmore.client.queues[q]
         queue.put(SomeJob, {})
         expect(queue.length).to be(1)
@@ -57,6 +56,13 @@ describe "Reservers::Strategies::Filtering" do
       expect(filter.next.name).to eq('other')
       expect(filter.next.name).to eq('bar')
       expect { filter.next }.to raise_error(StopIteration)
+    end
+
+    it "should return an empty array if nothing matches the filter" do
+      queue = Qmore.client.queues["filtered"]
+
+      filter = Qmore::Reservers::Strategies::Filtering.default([queue], ['queue'])
+      expect(filter.to_a).to(eq([]))
     end
   end
 end
