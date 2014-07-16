@@ -166,7 +166,6 @@ describe "Attributes" do
       queues = prioritize_queues(priority_buckets, @real_queues)
 
       expect(queues[0..4].sort).to eq(others.sort)
-
       expect(queues[5..-1]).to eq(["high_x", "foo", "high_y", "superhigh_z"])
       expect(queues).not_to eq(others.sort + ["high_x", "foo", "high_y", "superhigh_z"])
     end
