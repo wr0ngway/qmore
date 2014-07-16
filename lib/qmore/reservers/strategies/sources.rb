@@ -4,9 +4,8 @@ module Qmore::Reservers::Strategies::Sources
   # pull work from. Ignores any queues that do not have tasks available.
   def self.direct(client)
     Enumerator.new do |yielder|
-      queues = client.queues.counts.reject do |queue|
-        total = %w(waiting recurring depends stalled scheduled).inject(0) { |sum, state| sum += queue[state].to_i }
-        total == 0
+      queues = client.queues.counts.select do |queue|
+        %w(waiting recurring depends stalled scheduled).any? {|state| queue[state].to_i > 0 }
       end
 
       queues.each do |queue|
