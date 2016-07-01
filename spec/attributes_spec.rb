@@ -52,6 +52,10 @@ describe "Attributes" do
       expand_queues(["!@mykey"], @real_queues).should == ["foo"]
     end
 
+    it "continues matching patterns following a blacklisted pattern" do
+      expand_queues(["!f*", "!*high*", "*foo*"], @real_queues).should == ["foo"]
+    end
+
     it "will not bloat the given real_queues" do
       orig = @real_queues.dup
       expand_queues(["@mykey"], @real_queues)

@@ -25,6 +25,7 @@ module Qmore
 
       while q = queue_patterns.shift
         q = q.to_s
+        negated = false
 
         if q =~ /^(!)?@(.*)/
           key = $2.strip
